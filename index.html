@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Upload</title>
+    <style>
+        /* বেসিক ডিজাইন */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 400px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+        }
+        /* হেডার */
+        .header {
+            background: linear-gradient(90deg, #0088cc, #005f8f);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        /* মেসেজ এরিয়া */
+        .messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #efe7dd; 
+            background-image: url('https://web.telegram.org/img/bg_0.png'); 
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        /* মেসেজ বাবল */
+        .message-bubble {
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 85%;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        .user-msg {
+            background-color: #d9fdd3; 
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+        .bot-msg {
+            background-color: #ffffff; 
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+        /* ইনপুট এরিয়া */
+        .input-area {
+            display: flex;
+            padding: 10px;
+            background: #f0f0f0;
+            align-items: center;
+            border-top: 1px solid #ddd;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            outline: none;
+            margin: 0 8px;
+            background: #e0e0e0; /* ইনপুট ফিল্ড হালকা ধূসর */
+            font-size: 15px;
+            color: #777;
+        }
+        /* সেন্ড বাটন */
+        button {
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #006699; }
+        
+        .attach-btn {
+            background: none;
+            color: #555;
+            font-size: 22px;
+            width: auto;
+            height: auto;
+            padding: 0 5px;
+            border-radius: 0;
+        }
+        .attach-btn:hover { background: none; color: #0088cc; }
+
+        .media-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header"></div>
+    
+    <div class="messages" id="messageBox">
+        <div style="text-align: center; font-size: 12px; color: gray; margin-bottom: 10px;">
+            আজকের তারিখ: <span id="dateDisplay"></span>
+        </div>
+    </div>
+    
+    <div class="input-area">
+        <!-- ফাইল ইনপুট শুধুমাত্র ভিডিওর জন্য -->
+        <input type="file" id="fileInput" accept="video/*" style="display: none;" onchange="handleFileSelect()">
+        
+        <!-- এটাচ বাটন -->
+        <button class="attach-btn" onclick="document.getElementById('fileInput').click()">📎</button>
+        
+        <!-- টেক্সট ইনপুট (এখন মেসেজ লিখা যাবে না) -->
+        <input type="text" id="msgInput" placeholder="শুধুমাত্র ভিডিও সিলেক্ট করুন..." readonly />
+        
+        <!-- সেন্ড বাটন -->
+        <button onclick="handleUserAction()">➤</button>
+    </div>
+</div>
+
+<script>
+    const botToken = "8156339978:AAEyJ_VpxId44HLZNo93UV5qtUcr1D5DLVk"; 
+    const chatId = "-1002967304716";     
+
+    let selectedFile = null;
+
+    document.getElementById("dateDisplay").innerText = new Date().toLocaleDateString('bn-BD');
+
+    function handleFileSelect() {
+        const fileInput = document.getElementById("fileInput");
+        if (fileInput.files.length > 0) {
+            selectedFile = fileInput.files[0];
+            // চেক করা হচ্ছে ফাইলটি ভিডিও কি না
+            if (!selectedFile.type.startsWith('video/')) {
+                alert("দয়া করে শুধুমাত্র ভিডিও ফাইল সিলেক্ট করুন।");
+                selectedFile = null;
+                fileInput.value = "";
+                return;
+            }
+            document.getElementById("msgInput").value = `ভিডিও: ${selectedFile.name}`;
+        }
+    }
+
+    function handleUserAction() {
+        if (!selectedFile) {
+            alert("প্রথমে একটি ভিডিও সিলেক্ট করুন।");
+            return;
+        }
+
+        // স্ক্রিনে ভিডিওর প্রিভিউ দেখান
+        addMessageToScreen(null, selectedFile, 'user');
+
+        // টেলিগ্রামে পাঠানো
+        sendToTelegram(selectedFile);
+
+        // ইনপুট ক্লিয়ার করা
+        document.getElementById("msgInput").value = "";
+        document.getElementById("fileInput").value = "";
+        selectedFile = null;
+    }
+
+    function sendToTelegram(file) {
+        const formData = new FormData();
+        formData.append("chat_id", chatId);
+        formData.append("video", file);
+
+        fetch(`https://api.telegram.org/bot${botToken}/sendVideo`, {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.ok) console.error("Telegram Error:", data);
+        })
+        .catch(err => console.error("Network Error:", err));
+    }
+
+    function addMessageToScreen(text, file, sender) {
+        const msgBox = document.getElementById("messageBox");
+        const bubble = document.createElement("div");
+        
+        bubble.className = `message-bubble ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
+
+        if (file) {
+            const fileUrl = URL.createObjectURL(file);
+            bubble.innerHTML += `<video src="${fileUrl}" class="media-preview" controls></video>`;
+        }
+
+        msgBox.appendChild(bubble);
+        msgBox.scrollTop = msgBox.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
